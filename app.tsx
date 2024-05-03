@@ -9,132 +9,150 @@ interface Task {
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  const addTask = (text: string) => {
+  const addNewTask = (text: string) => {
     const newTask = { id: Date.now(), text, completed: false };
-    setTasks([...tasks, newTask]);
+    setTasks(previousTasks => [...previousTasks, newTask]);
   };
 
-  const deleteTask = (id: number) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const removeTaskById = (taskId: number) => {
+    setTasks(tasks => tasks.filter(task => task.id !== taskId));
   };
 
-  const toggleTaskCompletion = (id: number) => {
-    setTasks(tasks.map(task => (task.id === id ? { ...task, completed: !task.completed } : task)));
+  const toggleCompletionStatus = (taskId: number) => {
+    setTasks(tasks => 
+      tasks.map(task => 
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
-  const editTask = (id: number, newText: string) => {
-    setTasks(tasks.map(task => (task.id === id ? { ...task, text: newText } : task)));
+  const updateTaskText = (taskId: number, newText: string) => {
+    setTasks(tasks => 
+      tasks.map(task => 
+        task.id === taskId ? { ...task, text: newText } : task
+      )
+    );
   };
 
   return (
     <div>
-      <AddTaskForm addTask={addTask} />
-      <TaskList
+      <TaskForm onAddTask={addNewTask} />
+      <TaskDisplay
         tasks={tasks}
-        toggleTaskCompletion={toggleTaskCompletion}
-        deleteTask={deleteTask}
-        editTask={editTask}
+        onToggleCompletion={toggleCompletionStatus}
+        onDeleteTask={removeTaskById}
+        onEditTask={updateTaskText}
       />
     </div>
   );
 };
 
-interface AddTaskFormProps {
-  addTask: (text: string) => void;
+interface TaskFormProps {
+  onAddTask: (text: string) => void;
 }
 
-const AddTaskForm: React.FC<AddTaskFormProps> = ({ addTask }) => {
-  const [text, setText] = useState('');
+const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
+  const [taskInput, setTaskInput] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    addTask(text);
-    setText('');
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!taskInput.trim()) return;
+    onAddTask(taskInput);
+    setTaskInput('');
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleFormSubmit}>
       <input
         type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
+        value={taskInput}
+        onChange={(e) => setTaskInput(e.target.value)}
       />
       <button type="submit">Add Task</button>
     </form>
   );
 };
 
-interface TaskListProps {
+interface TaskDisplayProps {
   tasks: Task[];
-  toggleTaskCompletion: (id: number) => void;
-  deleteTask: (id: number) => void;
-  editTask: (id: number, newText: string) => void;
+  onToggleCompletion: (taskId: number) => void;
+  onDeleteTask: (taskId: number) => void;
+  onEditTask: (taskId: number, newText: string) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, toggleTaskCompletion, deleteTask, editTask }) => {
+const TaskDisplay: React.FC<TaskDisplayProps> = ({
+  tasks,
+  onToggleCompletion,
+  onDeleteTask,
+  onEditTask,
+}) => {
   return (
     <ul>
       {tasks.map(task => (
-        <TaskItem
+        <TaskListItem
           key={task.id}
           task={task}
-          toggleTaskCompletion={toggleTaskCompletion}
-          deleteTask={deleteTask}
-          editTask={editTask}
+          onToggleTaskCompletion={onToggleCompletion}
+          onDeleteTask={onDeleteTask}
+          onEditTaskText={onEditTask}
         />
       ))}
     </ul>
   );
 };
 
-interface TaskItemProps {
+interface TaskListItemProps {
   task: Task;
-  toggleTaskCompletion: (id: number) => void;
-  deleteTask: (id: number) => void;
-  editTask: (id: number, newText: string) => void;
+  onToggleTaskCompletion: (taskId: number) => void;
+  onDeleteTask: (taskId: number) => void;
+  onEditTaskText: (taskId: number, newText: string) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, toggleTaskCompletion, deleteTask, editTask }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [newText, setNewText] = useState(task.text);
+const TaskListItem: React.FC<TaskListItemProps> = ({
+  task,
+  onToggleTaskCompletion,
+  onDeleteTask,
+  onEditTaskText,
+}) => {
+  const [isEditActive, setIsEditActive] = useState(false);
+  const [editText, setEditText] = useState(task.text);
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  const activateEdit = () => {
+    setIsEditActive(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewText(e.target.value);
+  const handleEditTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEditText(event.target.value);
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    setNewText(task.text);
+  const cancelEdit = () => {
+    setIsEditActive(false);
+    setEditText(task.text);
   };
 
-  const handleSave = () => {
-    editTask(task.id, newText);
-    setIsEditing(false);
+  const saveEditedText = () => {
+    onEditTaskText(task.id, editText);
+    setIsEditActive(false);
   };
 
   return (
     <li>
-      {isEditing ? (
+      {isEditActive ? (
         <>
-          <input type="text" value={newText} onChange={handleChange} />
-          <button onClick={handleSave}>Save</button>
-          <button onClick={handleCancel}>Cancel</button>
+          <input type="text" value={editText} onChange={handleEditTextChange} />
+          <button onClick={saveEditedText}>Save</button>
+          <button onClick={cancelEdit}>Cancel</button>
         </>
       ) : (
         <>
           <span 
             style={{ textDecoration: task.completed ? 'line-through' : 'none' }}
-            onClick={() => toggleTaskCompletion(task.id)}
+            onClick={() => onToggleTaskCompletion(task.id)}
           >
             {task.text}
           </span>
-          <button onClick={() => deleteTask(task.id)}>Delete</button>
-          <button onClick={handleEdit}>Edit</button>
+          <button onClick={() => onDeleteTask(task.id)}>Delete</button>
+          <button onClick={activateEdit}>Edit</button>
         </>
       )}
     </li>
