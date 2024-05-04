@@ -8,34 +8,66 @@ interface Task {
 
 const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const addNewTask = (text: string) => {
-    const newTask = { id: Date.now(), text, completed: false };
-    setTasks(previousTasks => [...previousTasks, newTask]);
+    try {
+      if (!text) throw new Error("Task cannot be empty.");
+      const newTask = { id: Date.now(), text, completed: false };
+      setTasks(previousTasks => [...previousTasks, newTask]);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError(err.message);
+      }
+    }
   };
 
   const removeTaskById = (taskId: number) => {
-    setTasks(tasks => tasks.filter(task => task.id !== taskId));
+    try {
+      setTasks(tasks => tasks.filter(task => task.id !== taskId));
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError(err.message);
+      }
+    }
   };
 
   const toggleCompletionStatus = (taskId: number) => {
-    setTasks(tasks => 
-      tasks.map(task => 
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
+    try {
+      setTasks(tasks => 
+        tasks.map(task => 
+          task.id === taskId ? { ...task, completed: !task.completed } : task
+        )
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError(err.message);
+      }
+    }
   };
 
   const updateTaskText = (taskId: number, newText: string) => {
-    setTasks(tasks => 
-      tasks.map(task => 
-        task.id === taskId ? { ...task, text: newText } : task
-      )
-    );
+    try {
+      if (!newText) throw new Error("Task cannot be empty.");
+      setTasks(tasks => 
+        tasks.map(task => 
+          task.id === taskId ? { ...task, text: newText } : task
+        )
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setError(err.message);
+      }
+    }
   };
 
   return (
     <div>
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
       <TaskForm onAddTask={addNewTask} />
       <TaskDisplay
         tasks={tasks}
@@ -56,8 +88,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!taskInput.trim()) return;
-    onAddTask(taskInput);
+    onAddTask(taskInput.trim());
     setTaskInput('');
   };
 
@@ -131,7 +162,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
   };
 
   const saveEditedText = () => {
-    onEditTaskText(task.id, editText);
+    onEditTaskText(task.id, editText.trim());
     setIsEditActive(false);
   };
 
