@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Simple in-memory cache implementation
 const taskIndexCache: Record<number, number> = {};
 
 app.use((req, res, next) => {
@@ -27,16 +26,25 @@ let tasks: { id: number; content: string }[] = [];
 
 const findTaskIndexCached = (taskId: number): number => {
     if (taskIndexCache[taskId] !== undefined && tasks[taskIndexCache[taskId]]?.id === taskId) {
-        // Cache hit, and the task id matches the cached index
         return taskIndexCache[taskId];
     } else {
-        // Cache miss or stale cache entry, find the task and update cache
         const index = tasks.findIndex(t => t.id === taskId);
         if (index !== -1) {
             taskIndexCache[taskId] = index;
         }
         return index;
     }
+};
+
+const cleanUpCache = () => {
+    Object.keys(taskIndexCache).forEach(taskId => {
+        const taskIndex = tasks.findIndex(t => t.id === Number(taskId));
+        if (taskIndex === -1) {
+            delete taskIndexCache[Number(taskId)];
+        } else {
+            taskIndexCache[Number(taskId)] = taskIndex;
+        }
+    });
 };
 
 app.get('/tasks', (req, res) => {
@@ -61,7 +69,6 @@ app.post('/tasks', (req, res) => {
     }
     const newTask = { id: tasks.length + 1, content };
     tasks.push(newTask);
-    // No need to cache here since it's a new item
     res.status(201).send(newTask);
 });
 
@@ -72,6 +79,7 @@ app.put('/tasks/:taskId', (req, res) => {
     
     if (taskIndex > -1) {
         tasks[taskIndex] = { id: taskId, content };
+        cleanUpCache();
         res.send(tasks[taskIndex]);
     } else {
         res.status(404).send('Task not found');
@@ -84,8 +92,7 @@ app.delete('/tasks/:taskId', (req, res) => {
     
     if (taskIndex > -1) {
         tasks.splice(taskIndex, 1);
-        // Invalidate cache entry as the indices have shifted
-        delete taskIndexCache[taskId];
+        cleanUpCache();
         res.status(204).send();
     } else {
         res.status(404).send('Task not found');
