@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 type Task = {
   id: string;
   title: string;
@@ -7,11 +9,7 @@ type Task = {
   updatedAt: Date;
 };
 
-const taskList: Task[] = [];
-
-const generateUniqueId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
+const taskList = new Map<string, Task>();
 
 const isTaskValid = (taskTitle: string, taskDescription?: string): boolean => {
   if (!taskTitle || taskTitle.length < 3) {
@@ -27,19 +25,20 @@ const addNewTask = (title: string, description?: string): Task => {
   isTaskValid(title, description);
   
   const newTask: Task = {
-    id: generateUniqueId(),
+    id: uuidv4(),
     title,
     description,
     status: 'pending',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  taskList.push(newTask);
+  
+  taskList.set(newTask.id, newTask);
   return newTask;
 };
 
 const changeTaskStatus = (taskId: string, newStatus: 'pending' | 'in progress' | 'done'): Task | undefined => {
-  const task = taskList.find(t => t.id === taskId);
+  const task = taskList.get(taskId);
   if (!task) {
     throw new Error('Task not found.');
   }
@@ -49,15 +48,14 @@ const changeTaskStatus = (taskId: string, newStatus: 'pending' | 'in progress' |
 };
 
 const findTaskById = (taskId: string): Task | undefined => {
-  return taskList.find(task => task.id === taskId);
+  return taskList.get(taskId);
 };
 
 const removeTask = (taskId: string): void => {
-  const index = taskList.findIndex(task => task.id === taskId);
-  if (index === -1) {
+  if (!taskList.has(taskId)) {
     throw new Error('Task not found.');
   }
-  taskList.splice(index, 1);
+  taskList.delete(taskId);
 };
 
 export { Task, addNewTask as createTask, changeTaskStatus as updateTaskStatus, findTaskById as getTaskById, removeTask as deleteTask };
