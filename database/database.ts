@@ -29,39 +29,47 @@ const userSchema = new mongoose.Schema({
   tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
 });
 
-const Task = mongoose.model('Task', taskSchema);
-const User = mongoose.model('User', userSchema);
+const TaskModel = mongoose.model('Task', taskSchema);
+const UserModel = mongoose.model('User', userSchema);
 
-const createTask = async (taskData: object) => {
-  const task = new Task(taskData);
-  await task.save();
-  return task;
+const createNewTask = async (newTaskData: object) => {
+  const newTask = new TaskModel(newTaskData);
+  await newTask.save();
+  return newTask;
 };
 
-const getTasks = async () => {
-  return await Task.find();
+const retrieveAllTasks = async () => {
+  return await TaskModel.find();
 };
 
-const getTaskById = async (id: string) => {
-  return await Task.findById(id);
+const retrieveTaskById = async (taskId: string) => {
+  return await TaskModel.findById(taskId);
 };
 
-const updateTask = async (id: string, updateData: object) => {
-  return await Task.findByIdAndUpdate(id, updateData, { new: true });
+const updateExistingTask = async (taskId: string, taskUpdateData: object) => {
+  return await TaskModel.findByIdAndUpdate(taskId, taskUpdateData, { new: true });
 };
 
-const deleteTask = async (id: string) => {
-  await Task.findByIdAndDelete(id);
+const deleteExistingTask = async (taskId: string) => {
+  await TaskModel.findByIdAndDelete(taskId);
 };
 
-const createUser = async (userData: object) => {
-  const user = new User(userData);
-  await user.save();
-  return user;
+const registerNewUser = async (newUserData: object) => {
+  const newUser = new UserModel(newUserData);
+  await newUser.save();
+  return newUser;
 };
 
-const getUserByUsername = async (username: string) => {
-  return await User.findOne({ username });
+const findUserByUsername = async (userName: string) => {
+  return await UserModel.findOne({ username: userName });
 };
 
-export { createTask, getTasks, getTaskById, updateTask, deleteTask, createUser, getUserByUsername };
+export { 
+  createNewTask, 
+  retrieveAllTasks, 
+  retrieveTaskById, 
+  updateExistingTask, 
+  deleteExistingTask, 
+  registerNewUser, 
+  findUserByUsername 
+};
