@@ -1,31 +1,31 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as generateUniqueId } from 'uuid';
 
-type Task = {
+interface ITask {
     id: string;
     title: string;
     description?: string;
     status: 'pending' | 'in progress' | 'done';
     createdAt: Date;
     updatedAt: Date;
-};
+}
 
-const taskList = new Map<string, Task>();
+const taskRegistry = new Map<string, ITask>();
 
-const isTaskValid = (taskTitle: string, taskDescription?: string): boolean => {
-    if (!taskTitle || taskTitle.length < 3) {
+const validateTaskDetails = (title: string, description?: string): boolean => {
+    if (!title || title.length < 3) {
         throw new Error('Task title must be at least 3 characters long.');
     }
-    if (taskDescription && taskDescription.length > 200) {
+    if (description && description.length > 200) {
         throw new Error('Task description cannot exceed 200 characters.');
     }
     return true;
 };
 
-const addNewTask = (title: string, description?: string): Task => {
-    isTaskValid(title, description);
+const createTask = (title: string, description?: string): ITask => {
+    validateTaskDetails(title, description);
 
-    const newTask: Task = {
-        id: uuidv4(),
+    const newTask: ITask = {
+        id: generateUniqueId(),
         title,
         description,
         status: 'pending',
@@ -33,35 +33,35 @@ const addNewTask = (title: string, description?: string): Task => {
         updatedAt: new Date(),
     };
 
-    taskList.set(newTask.id, newTask);
+    taskRegistry.set(newTask.id, newTask);
     return newTask;
 };
 
-const changeTaskStatus = (taskId: string, newStatus: 'pending' | 'in progress' | 'done'): Task | undefined => {
-    const task = taskList.get(taskId);
-    if (!task) {
+const updateTaskStatus = (taskId: string, newStatus: 'pending' | 'in progress' | 'done'): ITask | undefined => {
+    const taskToUpdate = taskRegistry.get(taskId);
+    if (!taskToUpdate) {
         throw new Error('Task not found.');
     }
-    task.status = newStatus;
-    task.updatedAt = new Date();
-    return task;
+    taskToUpdate.status = newStatus;
+    taskToUpdate.updatedAt = new Date();
+    return taskToUpdate;
 };
 
-const findTaskById = (taskId: string): Task | undefined => {
-    return taskList.get(taskId);
+const getTaskById = (taskId: string): ITask | undefined => {
+    return taskRegistry.get(taskId);
 };
 
-const removeTask = (taskId: string): void => {
-    if (!taskList.has(taskId)) {
+const deleteTask = (taskId: string): void => {
+    if (!taskRegistry.has(taskId)) {
         throw new Error('Task not found.');
     }
-    taskList.delete(taskId);
+    taskRegistry.delete(taskId);
 };
 
 export { 
-    Task, 
-    addNewTask as createTask, 
-    changeTaskStatus as updateTaskStatus, 
-    findTaskById as getTaskById, 
-    removeTask as deleteTask 
+    ITask, 
+    createTask, 
+    updateTaskStatus, 
+    getTaskById, 
+    deleteTask 
 };
