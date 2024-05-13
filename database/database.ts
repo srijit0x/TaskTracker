@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const { MONGODB_URI } = process.env;
@@ -10,7 +9,7 @@ mongoose.connect(MONGODB_URI as string, {
   useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB Connected'))
-.catch(err => console.log(err));
+.catch(err => console.log(`Database connection error: ${err.message}`));
 
 const taskSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -33,35 +32,70 @@ const TaskModel = mongoose.model('Task', taskSchema);
 const UserModel = mongoose.model('User', userSchema);
 
 const createNewTask = async (newTaskData: object) => {
-  const newTask = new TaskModel(newTaskData);
-  await newTask.save();
-  return newTask;
+  try {
+    const newTask = new TaskModel(newTaskData);
+    await newTask.save();
+    return newTask;
+  } catch (error) {
+    console.log(`Error creating a new task: ${error.message}`);
+    throw error; // Rethrow to allow further handling by the caller
+  }
 };
 
 const retrieveAllTasks = async () => {
-  return await TaskModel.find();
+  try {
+    return await TaskModel.find();
+  } catch (error) {
+    console.log(`Error retrieving tasks: ${error.message}`);
+    throw error;
+  }
 };
 
 const retrieveTaskById = async (taskId: string) => {
-  return await TaskModel.findById(taskId);
+  try {
+    return await TaskModel.findById(taskId);
+  } catch (error) {
+    console.log(`Error finding task by ID: ${error.message}`);
+    throw error;
+  }
 };
 
 const updateExistingTask = async (taskId: string, taskUpdateData: object) => {
-  return await TaskModel.findByIdAndUpdate(taskId, taskUpdateData, { new: true });
+  try {
+    return await TaskModel.findByIdAndUpdate(taskId, taskUpdateData, { new: true });
+  } catch (error) {
+    console.log(`Error updating task: ${error.message}`);
+    throw error;
+  }
 };
 
 const deleteExistingTask = async (taskId: string) => {
-  await TaskModel.findByIdAndDelete(taskId);
+  try {
+    await TaskModel.findByIdAndDelete(taskId);
+  } catch (error) {
+    console.log(`Error deleting task: ${error.message}`);
+    throw error;
+  }
 };
 
 const registerNewUser = async (newUserData: object) => {
-  const newUser = new UserModel(newUserData);
-  await newUser.save();
-  return newUser;
+  try {
+    const newUser = new UserModel(newUserData);
+    await newUser.save();
+    return newUser;
+  } catch (error) {
+    console.log(`Error registering user: ${error.message}`);
+    throw error;
+  }
 };
 
 const findUserByUsername = async (userName: string) => {
-  return await UserModel.findOne({ username: userName });
+  try {
+    return await UserModel.findOne({ username: userName });
+  } catch (error) {
+    console.log(`Error finding user by username: ${error.message}`);
+    throw error;
+  }
 };
 
 export { 
