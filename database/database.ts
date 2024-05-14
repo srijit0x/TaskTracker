@@ -28,70 +28,70 @@ const userSchema = new mongoose.Schema({
   tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
 });
 
-const TaskModel = mongoose.model('Task', taskSchema);
-const UserModel = mongoose.model('User', userSchema);
+const Task = mongoose.model('Task', taskSchema);
+const User = mongoose.model('User', userSchema);
 
-const createNewTask = async (newTaskData: object) => {
+const addTask = async (taskDetails: object) => {
   try {
-    const newTask = new TaskModel(newTaskData);
-    await newTask.save();
-    return newTask;
+    const task = new Task(taskDetails);
+    await task.save();
+    return task;
   } catch (error) {
-    console.log(`Error creating a new task: ${error.message}`);
+    console.log(`Error adding a new task: ${error.message}`);
     throw error; // Rethrow to allow further handling by the caller
   }
 };
 
-const retrieveAllTasks = async () => {
+const getAllTasks = async () => {
   try {
-    return await TaskModel.find();
+    return await Task.find();
   } catch (error) {
     console.log(`Error retrieving tasks: ${error.message}`);
     throw error;
   }
 };
 
-const retrieveTaskById = async (taskId: string) => {
+const getTaskById = async (taskId: string) => {
   try {
-    return await TaskModel.findById(taskId);
+    return await Task.findById(taskId);
   } catch (error) {
     console.log(`Error finding task by ID: ${error.message}`);
     throw error;
   }
 };
 
-const updateExistingTask = async (taskId: string, taskUpdateData: object) => {
+const updateTask = async (taskId: string, updatedTaskDetails: object) => {
   try {
-    return await TaskModel.findByIdAndUpdate(taskId, taskUpdateData, { new: true });
+    return await Task.findByIdAndUpdate(taskId, updatedTaskDetails, { new: true });
   } catch (error) {
     console.log(`Error updating task: ${error.message}`);
     throw error;
   }
 };
 
-const deleteExistingTask = async (taskId: string) => {
+const removeTask = async (taskId: string) => {
   try {
-    await TaskModel.findByIdAndDelete(taskId);
+    await Task.findByIdAndDelete(taskId);
   } catch (error) {
-    console.log(`Error deleting task: ${error.message}`);
+    console.log(`Error removing task: ${error.message}`);
     throw error;
   }
 };
 
-const registerNewUser = async (newUserData: object) => {
+const createUser = async (userDetails: object) => {
   try {
-    const newUser = new UserModel(newUserData);
-    await newUser.save();
-    return newUser;
+    const user = new User(userDetails);
+    await user.save();
+    return user;
   } catch (error) {
-    console.log(`Error registering user: ${error.message}`);
+    console.log(`Error creating user: ${error.message}`);
     throw error;
   }
 };
 
-const findUserByUsername = async (userName: string) => {
+const getUserByUsername = async (username: string) => {
   try {
-    return await UserModel.findOne({ username: userName });
+    return await User.findOne({ username });
   } catch (error) {
     console.log(`Error finding user by username: ${error.message}`);
     throw error;
@@ -99,11 +99,11 @@ const findUserByUsername = async (userName: string) => {
 };
 
 export { 
-  createNewTask, 
-  retrieveAllTasks, 
-  retrieveTaskById, 
-  updateExistingTask, 
-  deleteExistingTask, 
-  registerNewUser, 
-  findUserByUsername 
+  addTask, 
+  getAllTasks, 
+  getTaskById, 
+  updateTask, 
+  removeTask, 
+  createUser, 
+  getUserByUsername 
 };
