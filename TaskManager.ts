@@ -11,40 +11,59 @@ interface ITask {
 
 const taskRegistry = new Map<string, ITask>();
 
+function logError(error: Error): void {
+    console.error(error.message);
+}
+
 const validateTaskDetails = (title: string, description?: string): boolean => {
-    if (!title || title.length < 3) {
-        throw new Error('Task title must be at least 3 characters long.');
+    try {
+        if (!title || title.length < 3) {
+            throw new Error('Task title must be at least 3 characters long.');
+        }
+        if (description && description.length > 200) {
+            throw new Error('Task description cannot exceed 200 characters.');
+        }
+        return true;
+    } catch (error) {
+        logError(error as Error);
+        throw error;
     }
-    if (description && description.length > 200) {
-        throw new Error('Task description cannot exceed 200 characters.');
-    }
-    return true;
 };
 
 const createTask = (title: string, description?: string): ITask => {
-    validateTaskDetails(title, description);
+    try {
+        validateTaskDetails(title, description);
 
-    const newTask: ITask = {
-        id: generateUniqueId(),
-        title,
-        description,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    };
+        const newTask: ITask = {
+            id: generateUniqueId(),
+            title,
+            description,
+            status: 'pending',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
 
-    taskRegistry.set(newTask.id, newTask);
-    return newTask;
+        taskRegistry.set(newTask.id, newTask);
+        return newTask;
+    } catch (error) {
+        logError(error as Error);
+        throw new Error('Failed to create a new task.');
+    }
 };
 
 const updateTaskStatus = (taskId: string, newStatus: 'pending' | 'in progress' | 'done'): ITask | undefined => {
-    const taskToUpdate = taskRegistry.get(taskId);
-    if (!taskToUpdate) {
-        throw new Error('Task not found.');
+    try {
+        const taskToUpdate = taskRegistry.get(taskId);
+        if (!taskToUpdate) {
+            throw new Error('Task not found.');
+        }
+        taskToUpdate.status = newStatus;
+        taskToUpdate.updatedAt = new Date();
+        return taskToUpdate;
+    } catch (error) {
+        logError(error as Error);
+        throw new Error('Failed to update task status.');
     }
-    taskToUpdate.status = newStatus;
-    taskToUpdate.updatedAt = new Date();
-    return taskToUpdate;
 };
 
 const getTaskById = (taskId: string): ITask | undefined => {
@@ -52,10 +71,15 @@ const getTaskById = (taskId: string): ITask | undefined => {
 };
 
 const deleteTask = (taskId: string): void => {
-    if (!taskRegistry.has(taskId)) {
-        throw new Error('Task not found.');
+    try {
+        if (!taskRegistry.has(taskId)) {
+            throw new Error('Task not found.');
+        }
+        taskRegistry.delete(taskId);
+    } catch (error) {
+        logError(error as Error);
+        throw new Error('Failed to delete task.');
     }
-    taskRegistry.delete(taskId);
 };
 
 export { 
